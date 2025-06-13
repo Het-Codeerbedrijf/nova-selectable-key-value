@@ -29,6 +29,7 @@ export default {
   data() {
     return {
       pairs: this.parseValue(this.field.value),
+      defaultKey: this.getDefaultKey(),
     }
   },
   watch: {
@@ -51,10 +52,17 @@ export default {
       formData.append(this.fieldAttribute, this.value || '')
     },
     addPair() {
-      this.pairs.push({ key: '', value: '' })
+      // Use the first available option as default key
+      const options = this.field.meta && this.field.meta.options ? this.field.meta.options : {}
+      const firstKey = Object.keys(options)[0] || ''
+      this.pairs.push({ key: firstKey, value: '' })
     },
     removePair(index) {
       this.pairs.splice(index, 1)
+    },
+    getDefaultKey() {
+      const options = this.field.meta && this.field.meta.options ? this.field.meta.options : {}
+      return Object.keys(options)[0] || ''
     },
     parseValue(val) {
       if (!val) return []
