@@ -13,26 +13,19 @@
           editMode === true ? 'cursor-text' : 'cursor-default',
         ]"
       >
-        <textarea
-          rows="1"
+        <select
           :dusk="`key-value-key-${index}`"
           v-model="item.key"
           @focus="handleKeyFieldFocus"
           ref="keyField"
-          type="text"
-          class="font-mono text-xs resize-none block w-full px-3 py-3 dark:text-gray-400 bg-clip-border"
-          :readonly="!isEditable || readOnlyKeys"
+          class="font-mono text-xs block w-full px-3 py-3 dark:text-gray-400 bg-clip-border"
+          :disabled="!isEditable || readOnlyKeys"
           :tabindex="!isEditable || readOnlyKeys ? -1 : 0"
-          style="background-clip: border-box"
-          :class="[
-            !isEditable || readOnlyKeys
-              ? `${disabledBackgroundColors} focus:outline-none cursor-normal`
-              : defaultBackgroundColors,
-            editMode === true
-              ? 'hover:bg-20 focus:bg-white dark:focus:bg-gray-900 focus:outline-none focus:ring focus:ring-inset'
-              : 'focus:outline-none cursor-default',
-          ]"
-        />
+        >
+          <option v-for="(label, key) in $parent.currentField.meta.options" :key="key" :value="key">
+            {{ label }}
+          </option>
+        </select>
       </div>
 
       <div

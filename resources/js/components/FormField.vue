@@ -121,8 +121,11 @@ export default {
      * Add a row to the table.
      */
     addRow() {
+      // Use the first available option as default key
+      const options = this.currentField.meta && this.currentField.meta.options ? this.currentField.meta.options : {}
+      const firstKey = Object.keys(options)[0] || ''
       return tap(guid(), id => {
-        this.theData = [...this.theData, { id, key: '', value: '' }]
+        this.theData = [...this.theData, { id, key: firstKey, value: '' }]
         return id
       })
     },
@@ -149,7 +152,13 @@ export default {
      */
     selectRow(refId) {
       return this.$nextTick(() => {
-        this.$refs[refId][0].handleKeyFieldFocus()
+        const ref = this.$refs[refId]
+        if (ref && ref[0] && typeof ref[0].handleKeyFieldFocus === 'function') {
+          ref[0].handleKeyFieldFocus()
+        } else if (ref && ref[0] && ref[0].$refs && ref[0].$refs.keyField) {
+          // Fallback: focus the select element directly if handleKeyFieldFocus is not present
+          ref[0].$refs.keyField.focus()
+        }
       })
     },
 
