@@ -1,6 +1,6 @@
 <?php
 
-namespace Nowakadmin\SelectableKeyValue;
+namespace NowakAdmin\SelectableKeyValue;
 
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Events\ServingNova;

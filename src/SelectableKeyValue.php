@@ -1,6 +1,6 @@
 <?php
 
-namespace Nowakadmin\SelectableKeyValue;
+namespace NowakAdmin\SelectableKeyValue;
 
 use Laravel\Nova\Fields\KeyValue;
 
