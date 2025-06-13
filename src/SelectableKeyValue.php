@@ -2,9 +2,9 @@
 
 namespace Nowakadmin\SelectableKeyValue;
 
-use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\KeyValue;
 
-class SelectableKeyValue extends Field
+class SelectableKeyValue extends KeyValue
 {
     /**
      * The field's component.
@@ -12,4 +12,9 @@ class SelectableKeyValue extends Field
      * @var string
      */
     public $component = 'selectable-key-value';
+
+    public function options(array $options)
+    {
+        return $this->withMeta(['options' => $options]);
+    }
 }

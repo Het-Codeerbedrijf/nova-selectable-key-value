@@ -6,14 +6,16 @@
     :full-width-content="fullWidthContent"
   >
     <template #field>
-      <input
-        :id="field.attribute"
-        type="text"
-        class="w-full form-control form-input form-control-bordered"
-        :class="errorClasses"
-        :placeholder="field.name"
-        v-model="value"
-      />
+      <div>
+        <div v-for="(pair, index) in pairs" :key="index" class="flex items-center mb-2">
+          <select v-model="pair.key" class="form-control mr-2">
+            <option v-for="(label, key) in field.meta.options" :key="key" :value="key">{{ label }}</option>
+          </select>
+          <input v-model="pair.value" class="form-control mr-2" />
+          <button type="button" class="btn btn-danger" @click="removePair(index)">Remove</button>
+        </div>
+        <button type="button" class="btn btn-primary mt-2" @click="addPair">Add</button>
+      </div>
     </template>
   </DefaultField>
 </template>
@@ -23,22 +25,57 @@ import { FormField, HandlesValidationErrors } from 'laravel-nova'
 
 export default {
   mixins: [FormField, HandlesValidationErrors],
-
   props: ['resourceName', 'resourceId', 'field'],
-
-  methods: {
-    /*
-     * Set the initial, internal value for the field.
-     */
-    setInitialValue() {
-      this.value = this.field.value || ''
+  data() {
+    return {
+      pairs: this.parseValue(this.field.value),
+    }
+  },
+  watch: {
+    value(val) {
+      this.pairs = this.parseValue(val)
     },
-
-    /**
-     * Fill the given FormData object with the field's internal value.
-     */
+    pairs: {
+      handler(val) {
+        this.value = this.stringifyValue(val)
+      },
+      deep: true,
+    },
+  },
+  methods: {
+    setInitialValue() {
+      this.pairs = this.parseValue(this.field.value)
+      this.value = this.stringifyValue(this.pairs)
+    },
     fill(formData) {
       formData.append(this.fieldAttribute, this.value || '')
+    },
+    addPair() {
+      this.pairs.push({ key: '', value: '' })
+    },
+    removePair(index) {
+      this.pairs.splice(index, 1)
+    },
+    parseValue(val) {
+      if (!val) return []
+      if (typeof val === 'string') {
+        try {
+          return Object.entries(JSON.parse(val)).map(([key, value]) => ({ key, value }))
+        } catch {
+          return []
+        }
+      }
+      if (typeof val === 'object') {
+        return Object.entries(val).map(([key, value]) => ({ key, value }))
+      }
+      return []
+    },
+    stringifyValue(pairs) {
+      const obj = {}
+      pairs.forEach(({ key, value }) => {
+        if (key !== '') obj[key] = value
+      })
+      return JSON.stringify(obj)
     },
   },
 }

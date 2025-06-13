@@ -2,4 +2,5 @@
 
 /vendor/
 /node_modules/
-/composer.lock/
+composer.lock
+package-lock.json
