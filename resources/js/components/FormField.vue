@@ -1,89 +1,176 @@
 <template>
   <DefaultField
-    :field="field"
+    :field="currentField"
     :errors="errors"
+    :full-width-content="
+      fullWidthContent || ['modal', 'action-modal'].includes(mode)
+    "
     :show-help-text="showHelpText"
-    :full-width-content="fullWidthContent"
   >
     <template #field>
-      <div>
-        <div v-for="(pair, index) in pairs" :key="index" class="flex items-center mb-2">
-          <select v-model="pair.key" class="form-control mr-2">
-            <option v-for="(label, key) in field.meta.options" :key="key" :value="key">{{ label }}</option>
-          </select>
-          <input v-model="pair.value" class="form-control mr-2" />
-          <button type="button" class="btn btn-danger" @click="removePair(index)">Remove</button>
+      <FormTable
+        v-show="theData.length > 0"
+        :edit-mode="!currentlyIsReadonly"
+        :can-delete-row="currentField.canDeleteRow"
+      >
+        <FormHeader
+          :key-label="currentField.keyLabel"
+          :value-label="currentField.valueLabel"
+        />
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden key-value-items">
+          <FormItem
+            v-for="(item, index) in theData"
+            :index="index"
+            @remove-row="removeRow"
+            :item.sync="item"
+            :key="item.id"
+            :ref="item.id"
+            :read-only="currentlyIsReadonly"
+            :read-only-keys="currentField.readonlyKeys"
+            :can-delete-row="currentField.canDeleteRow"
+          />
         </div>
-        <button type="button" class="btn btn-primary mt-2" @click="addPair">Add</button>
+      </FormTable>
+
+      <div class="flex items-center justify-center">
+        <Button
+          v-if="
+            !currentlyIsReadonly &&
+            !currentField.readonlyKeys &&
+            currentField.canAddRow
+          "
+          @click="addRowAndSelect"
+          :dusk="`${field.attribute}-add-key-value`"
+          leading-icon="plus-circle"
+          variant="link"
+        >
+          {{ currentField.actionText }}
+        </Button>
       </div>
     </template>
   </DefaultField>
 </template>
 
 <script>
-import { FormField, HandlesValidationErrors } from 'laravel-nova'
+import findIndex from 'lodash/findIndex'
+import fromPairs from 'lodash/fromPairs'
+import reject from 'lodash/reject'
+import tap from 'lodash/tap'
+import { DependentFormField, HandlesValidationErrors } from 'laravel-nova'
+import { Button } from 'laravel-nova-ui'
+
+function guid() {
+  var S4 = function () {
+    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
+  }
+  return (
+    S4() +
+    S4() +
+    '-' +
+    S4() +
+    '-' +
+    S4() +
+    '-' +
+    S4() +
+    '-' +
+    S4() +
+    S4() +
+    S4()
+  )
+}
 
 export default {
-  mixins: [FormField, HandlesValidationErrors],
-  props: ['resourceName', 'resourceId', 'field'],
-  data() {
-    return {
-      pairs: this.parseValue(this.field.value),
-      defaultKey: this.getDefaultKey(),
-    }
+  mixins: [HandlesValidationErrors, DependentFormField],
+
+  components: {
+    Button,
   },
-  watch: {
-    value(val) {
-      this.pairs = this.parseValue(val)
-    },
-    pairs: {
-      handler(val) {
-        this.value = this.stringifyValue(val)
-      },
-      deep: true,
-    },
+
+  data: () => ({ theData: [] }),
+
+  mounted() {
+    this.populateKeyValueData()
   },
+
   methods: {
-    setInitialValue() {
-      this.pairs = this.parseValue(this.field.value)
-      this.value = this.stringifyValue(this.pairs)
+    /*
+     * Set the initial value for the field
+     */
+    populateKeyValueData() {
+      this.theData = Object.entries(this.value || {}).map(([key, value]) => ({
+        id: guid(),
+        key: `${key}`,
+        value,
+      }))
     },
+
+    /**
+     * Provide a function that fills a passed FormData object with the
+     * field's internal value attribute.
+     */
     fill(formData) {
-      formData.append(this.fieldAttribute, this.value || '')
+      this.fillIfVisible(
+        formData,
+        this.fieldAttribute,
+        JSON.stringify(this.finalPayload)
+      )
     },
-    addPair() {
-      // Use the first available option as default key
-      const options = this.field.meta && this.field.meta.options ? this.field.meta.options : {}
-      const firstKey = Object.keys(options)[0] || ''
-      this.pairs.push({ key: firstKey, value: '' })
-    },
-    removePair(index) {
-      this.pairs.splice(index, 1)
-    },
-    getDefaultKey() {
-      const options = this.field.meta && this.field.meta.options ? this.field.meta.options : {}
-      return Object.keys(options)[0] || ''
-    },
-    parseValue(val) {
-      if (!val) return []
-      if (typeof val === 'string') {
-        try {
-          return Object.entries(JSON.parse(val)).map(([key, value]) => ({ key, value }))
-        } catch {
-          return []
-        }
-      }
-      if (typeof val === 'object') {
-        return Object.entries(val).map(([key, value]) => ({ key, value }))
-      }
-      return []
-    },
-    stringifyValue(pairs) {
-      const obj = {}
-      pairs.forEach(({ key, value }) => {
-        if (key !== '') obj[key] = value
+
+    /**
+     * Add a row to the table.
+     */
+    addRow() {
+      return tap(guid(), id => {
+        this.theData = [...this.theData, { id, key: '', value: '' }]
+        return id
       })
-      return JSON.stringify(obj)
+    },
+
+    /**
+     * Add a row to the table and select its first field.
+     */
+    addRowAndSelect() {
+      return this.selectRow(this.addRow())
+    },
+
+    /**
+     * Remove the row from the table.
+     */
+    removeRow(id) {
+      return tap(
+        findIndex(this.theData, row => row.id === id),
+        index => this.theData.splice(index, 1)
+      )
+    },
+
+    /**
+     * Select the first field in a row with the given ref ID.
+     */
+    selectRow(refId) {
+      return this.$nextTick(() => {
+        this.$refs[refId][0].handleKeyFieldFocus()
+      })
+    },
+
+    onSyncedField() {
+      this.populateKeyValueData()
+    },
+  },
+
+  computed: {
+    /**
+     * Return the final filtered json object
+     */
+    finalPayload() {
+      return fromPairs(
+        reject(
+          this.theData.map(row =>
+            row && row.key ? [row.key, row.value] : undefined
+          ),
+          row => row === undefined
+        )
+      )
     },
   },
 }
