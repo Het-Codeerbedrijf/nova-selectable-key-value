@@ -1,186 +1,137 @@
 <template>
   <DefaultField
-    :field="currentField"
+    :field="field"
     :errors="errors"
-    :full-width-content="
-      fullWidthContent || ['modal', 'action-modal'].includes(mode)
-    "
     :show-help-text="showHelpText"
+    :full-width-content="fullWidthContent"
   >
     <template #field>
-      <FormTable
-        v-show="theData.length > 0"
-        :edit-mode="!currentlyIsReadonly"
-        :can-delete-row="currentField.canDeleteRow"
-      >
-        <FormHeader
-          :key-label="currentField.keyLabel"
-          :value-label="currentField.valueLabel"
-        />
-
-        <div class="bg-white dark:bg-gray-800 overflow-hidden key-value-items">
-          <FormItem
-            v-for="(item, index) in theData"
-            :index="index"
-            @remove-row="removeRow"
-            :item.sync="item"
-            :key="item.id"
-            :ref="item.id"
-            :read-only="currentlyIsReadonly"
-            :read-only-keys="currentField.readonlyKeys"
-            :can-delete-row="currentField.canDeleteRow"
-          />
-        </div>
-      </FormTable>
-
-      <div class="flex items-center justify-center">
-        <Button
-          v-if="
-            !currentlyIsReadonly &&
-            !currentField.readonlyKeys &&
-            currentField.canAddRow
-          "
-          @click="addRowAndSelect"
-          :dusk="`${field.attribute}-add-key-value`"
-          leading-icon="plus-circle"
-          variant="link"
+      <div>
+        <FormTable
+          v-show="theData.length > 0"
+          :edit-mode="true"
+          :can-delete-row="true"
         >
-          {{ currentField.actionText }}
+          <FormHeader
+            :key-label="field.keyLabel || 'Key'"
+            :value-label="field.valueLabel || 'Value'"
+          />
+
+          <div class="bg-white dark:bg-gray-800 overflow-hidden key-value-items">
+            <FormItem
+              v-for="(item, index) in theData"
+              :index="index"
+              @remove-row="removeRow"
+              :item="item"
+              :key="item.id"
+              :ref="item.id"
+              :edit-mode="true"
+              :read-only="false"
+              :read-only-keys="false"
+              :can-delete-row="true"
+              :options="fieldOptions"
+            />
+          </div>
+        </FormTable>
+
+        <Button
+          v-if="hasOptions"
+          class="w-full flex items-center justify-center mt-3"
+          @click="addRow"
+          variant="link"
+          type="button"
+        >
+          <span class="mr-1">{{ field.actionText || 'Add row' }}</span>
         </Button>
+
+        <p v-if="!hasOptions" class="text-sm text-red-500 mt-2">
+          Please provide options using the ->options() method.
+        </p>
       </div>
     </template>
   </DefaultField>
 </template>
 
 <script>
-import findIndex from 'lodash/findIndex'
-import fromPairs from 'lodash/fromPairs'
-import reject from 'lodash/reject'
-import tap from 'lodash/tap'
-import { DependentFormField, HandlesValidationErrors } from 'laravel-nova'
+import { FormField, HandlesValidationErrors } from 'laravel-nova'
 import { Button } from 'laravel-nova-ui'
+import FormTable from './FormTable'
+import FormHeader from './FormHeader'
+import FormItem from './FormItem'
 
 function guid() {
-  var S4 = function () {
-    return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1)
-  }
-  return (
-    S4() +
-    S4() +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    '-' +
-    S4() +
-    S4() +
-    S4()
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
   )
 }
 
 export default {
-  mixins: [HandlesValidationErrors, DependentFormField],
-
   components: {
     Button,
+    FormTable,
+    FormHeader,
+    FormItem
   },
 
-  data: () => ({ theData: [] }),
+  mixins: [FormField, HandlesValidationErrors],
+
+  data: () => ({ 
+    theData: [] 
+  }),
+
+  computed: {
+    fieldOptions() {
+      return this.field?.meta?.options || {}
+    },
+
+    hasOptions() {
+      const options = this.fieldOptions
+      return Object.keys(options).length > 0
+    }
+  },
 
   mounted() {
-    this.populateKeyValueData()
+    // Delay the population to ensure field.meta is available
+    this.$nextTick(() => {
+      if (this.hasOptions) {
+        this.populateKeyValueData()
+      }
+    })
   },
 
   methods: {
-    /*
-     * Set the initial value for the field
-     */
     populateKeyValueData() {
-      this.theData = Object.entries(this.value || {}).map(([key, value]) => ({
+      this.theData = Object.entries(this.field.value || {}).map(([key, value]) => ({
         id: guid(),
-        key: `${key}`,
-        value,
+        key,
+        value
       }))
     },
 
-    /**
-     * Provide a function that fills a passed FormData object with the
-     * field's internal value attribute.
-     */
-    fill(formData) {
-      this.fillIfVisible(
-        formData,
-        this.fieldAttribute,
-        JSON.stringify(this.finalPayload)
-      )
-    },
-
-    /**
-     * Add a row to the table.
-     */
     addRow() {
-      // Use the first available option as default key
-      const options = this.currentField.meta && this.currentField.meta.options ? this.currentField.meta.options : {}
-      const firstKey = Object.keys(options)[0] || ''
-      return tap(guid(), id => {
-        this.theData = [...this.theData, { id, key: firstKey, value: '' }]
-        return id
-      })
+      if (!this.hasOptions) return
+      
+      const firstKey = Object.keys(this.fieldOptions)[0] || ''
+      this.theData.push({ id: guid(), key: firstKey, value: '' })
     },
 
-    /**
-     * Add a row to the table and select its first field.
-     */
-    addRowAndSelect() {
-      return this.selectRow(this.addRow())
-    },
-
-    /**
-     * Remove the row from the table.
-     */
     removeRow(id) {
-      return tap(
-        findIndex(this.theData, row => row.id === id),
-        index => this.theData.splice(index, 1)
-      )
+      const index = this.theData.findIndex(row => row.id === id)
+      if (index !== -1) {
+        this.theData.splice(index, 1)
+      }
     },
 
-    /**
-     * Select the first field in a row with the given ref ID.
-     */
-    selectRow(refId) {
-      return this.$nextTick(() => {
-        const ref = this.$refs[refId]
-        if (ref && ref[0] && typeof ref[0].handleKeyFieldFocus === 'function') {
-          ref[0].handleKeyFieldFocus()
-        } else if (ref && ref[0] && ref[0].$refs && ref[0].$refs.keyField) {
-          // Fallback: focus the select element directly if handleKeyFieldFocus is not present
-          ref[0].$refs.keyField.focus()
+    fill(formData) {
+      const value = this.theData.reduce((acc, row) => {
+        if (row.key) {
+          acc[row.key] = row.value
         }
-      })
-    },
-
-    onSyncedField() {
-      this.populateKeyValueData()
-    },
-  },
-
-  computed: {
-    /**
-     * Return the final filtered json object
-     */
-    finalPayload() {
-      return fromPairs(
-        reject(
-          this.theData.map(row =>
-            row && row.key ? [row.key, row.value] : undefined
-          ),
-          row => row === undefined
-        )
-      )
-    },
-  },
+        return acc
+      }, {})
+      
+      formData.append(this.field.attribute, JSON.stringify(value))
+    }
+  }
 }
 </script>
