@@ -7,7 +7,12 @@
   >
     <template #field>
       <div>
+        <div v-if="!hasOptions" class="text-sm text-red-500 mb-2">
+          Please provide options using the ->options() method.
+        </div>
+        
         <FormTable
+          v-if="hasOptions"
           v-show="theData.length > 0"
           :edit-mode="true"
           :can-delete-row="true"
@@ -29,7 +34,7 @@
               :read-only="false"
               :read-only-keys="false"
               :can-delete-row="true"
-              :options="fieldOptions"
+              :options="field?.options ?? {}"
             />
           </div>
         </FormTable>
@@ -79,24 +84,31 @@ export default {
     theData: [] 
   }),
 
+  mounted() {
+    console.log('Field data:', this.field)
+    console.log('Field meta:', this.field?.meta)
+    console.log('Field options:', this.field?.meta?.options)
+    
+    // Delay the population to ensure field.meta is available
+    this.$nextTick(() => {
+      this.populateKeyValueData()
+    })
+  },
+
   computed: {
     fieldOptions() {
-      return this.field?.meta?.options || {}
+      // In Nova 5, options are directly on the field object
+      const options = this.field?.options ?? {}
+      console.log('Computed fieldOptions:', options)
+      return options
     },
 
     hasOptions() {
       const options = this.fieldOptions
-      return Object.keys(options).length > 0
+      const hasOpts = !!options && typeof options === 'object' && Object.keys(options).length > 0
+      console.log('hasOptions:', hasOpts, options)
+      return hasOpts
     }
-  },
-
-  mounted() {
-    // Delay the population to ensure field.meta is available
-    this.$nextTick(() => {
-      if (this.hasOptions) {
-        this.populateKeyValueData()
-      }
-    })
   },
 
   methods: {

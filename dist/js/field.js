@@ -41,6 +41,7 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 
 
 
@@ -64,24 +65,33 @@ function guid() {
       theData: []
     };
   },
+  mounted: function mounted() {
+    var _this$field,
+      _this$field2,
+      _this = this;
+    console.log('Field data:', this.field);
+    console.log('Field meta:', (_this$field = this.field) === null || _this$field === void 0 ? void 0 : _this$field.meta);
+    console.log('Field options:', (_this$field2 = this.field) === null || _this$field2 === void 0 || (_this$field2 = _this$field2.meta) === null || _this$field2 === void 0 ? void 0 : _this$field2.options);
+
+    // Delay the population to ensure field.meta is available
+    this.$nextTick(function () {
+      _this.populateKeyValueData();
+    });
+  },
   computed: {
     fieldOptions: function fieldOptions() {
-      var _this$field;
-      return ((_this$field = this.field) === null || _this$field === void 0 || (_this$field = _this$field.meta) === null || _this$field === void 0 ? void 0 : _this$field.options) || {};
+      var _this$field$options, _this$field3;
+      // In Nova 5, options are directly on the field object
+      var options = (_this$field$options = (_this$field3 = this.field) === null || _this$field3 === void 0 ? void 0 : _this$field3.options) !== null && _this$field$options !== void 0 ? _this$field$options : {};
+      console.log('Computed fieldOptions:', options);
+      return options;
     },
     hasOptions: function hasOptions() {
       var options = this.fieldOptions;
-      return Object.keys(options).length > 0;
+      var hasOpts = !!options && _typeof(options) === 'object' && Object.keys(options).length > 0;
+      console.log('hasOptions:', hasOpts, options);
+      return hasOpts;
     }
-  },
-  mounted: function mounted() {
-    var _this = this;
-    // Delay the population to ensure field.meta is available
-    this.$nextTick(function () {
-      if (_this.hasOptions) {
-        _this.populateKeyValueData();
-      }
-    });
   },
   methods: {
     populateKeyValueData: function populateKeyValueData() {
@@ -271,13 +281,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(vue__WEBPACK_IMPORTED_MODULE_0__);
 
 var _hoisted_1 = {
-  "class": "bg-white dark:bg-gray-800 overflow-hidden key-value-items"
+  key: 0,
+  "class": "text-sm text-red-500 mb-2"
 };
 var _hoisted_2 = {
-  "class": "mr-1"
+  "class": "bg-white dark:bg-gray-800 overflow-hidden key-value-items"
 };
 var _hoisted_3 = {
-  key: 1,
+  "class": "mr-1"
+};
+var _hoisted_4 = {
+  key: 3,
   "class": "text-sm text-red-500 mt-2"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
@@ -293,7 +307,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "full-width-content": _ctx.fullWidthContent
   }, {
     field: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-      return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FormTable, {
+      return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [!$options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, " Please provide options using the ->options() method. ")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasOptions ? (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)(((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_FormTable, {
+        key: 1,
         "edit-mode": true,
         "can-delete-row": true
       }, {
@@ -301,7 +316,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
           return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FormHeader, {
             "key-label": _ctx.field.keyLabel || 'Key',
             "value-label": _ctx.field.valueLabel || 'Value'
-          }, null, 8 /* PROPS */, ["key-label", "value-label"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(_ctx.theData, function (item, index) {
+          }, null, 8 /* PROPS */, ["key-label", "value-label"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(_ctx.theData, function (item, index) {
+            var _ctx$field$options, _ctx$field;
             return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_FormItem, {
               index: index,
               onRemoveRow: $options.removeRow,
@@ -313,23 +329,23 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
               "read-only": false,
               "read-only-keys": false,
               "can-delete-row": true,
-              options: $options.fieldOptions
+              options: (_ctx$field$options = (_ctx$field = _ctx.field) === null || _ctx$field === void 0 ? void 0 : _ctx$field.options) !== null && _ctx$field$options !== void 0 ? _ctx$field$options : {}
             }, null, 8 /* PROPS */, ["index", "onRemoveRow", "item", "options"]);
           }), 128 /* KEYED_FRAGMENT */))])];
         }),
         _: 1 /* STABLE */
-      }, 512 /* NEED_PATCH */), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, _ctx.theData.length > 0]]), $options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_Button, {
-        key: 0,
+      }, 512 /* NEED_PATCH */)), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, _ctx.theData.length > 0]]) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_Button, {
+        key: 2,
         "class": "w-full flex items-center justify-center mt-3",
         onClick: $options.addRow,
         variant: "link",
         type: "button"
       }, {
         "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
-          return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_2, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.field.actionText || 'Add row'), 1 /* TEXT */)];
+          return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_3, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(_ctx.field.actionText || 'Add row'), 1 /* TEXT */)];
         }),
         _: 1 /* STABLE */
-      }, 8 /* PROPS */, ["onClick"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_3, " Please provide options using the ->options() method. ")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])];
+      }, 8 /* PROPS */, ["onClick"])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !$options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_4, " Please provide options using the ->options() method. ")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])];
     }),
     _: 1 /* STABLE */
   }, 8 /* PROPS */, ["field", "errors", "show-help-text", "full-width-content"]);
