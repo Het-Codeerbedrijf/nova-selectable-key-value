@@ -16,6 +16,8 @@ class FieldServiceProvider extends ServiceProvider
         Nova::serving(function (ServingNova $event) {
             Nova::mix('selectable-key-value', __DIR__.'/../dist/mix-manifest.json');
         });
+
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang');
     }
 
     /**
