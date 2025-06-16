@@ -63,7 +63,6 @@ function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) 
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 
 
 
@@ -88,31 +87,18 @@ function guid() {
     };
   },
   mounted: function mounted() {
-    var _this$field,
-      _this$field2,
-      _this = this;
-    console.log('Field data:', this.field);
-    console.log('Field meta:', (_this$field = this.field) === null || _this$field === void 0 ? void 0 : _this$field.meta);
-    console.log('Field options:', (_this$field2 = this.field) === null || _this$field2 === void 0 || (_this$field2 = _this$field2.meta) === null || _this$field2 === void 0 ? void 0 : _this$field2.options);
-
-    // Delay the population to ensure field.meta is available
+    var _this = this;
     this.$nextTick(function () {
       _this.populateKeyValueData();
     });
   },
   computed: {
     fieldOptions: function fieldOptions() {
-      var _this$field$options, _this$field3;
-      // In Nova 5, options are directly on the field object
-      var options = (_this$field$options = (_this$field3 = this.field) === null || _this$field3 === void 0 ? void 0 : _this$field3.options) !== null && _this$field$options !== void 0 ? _this$field$options : {};
-      console.log('Computed fieldOptions:', options);
-      return options;
+      var _this$field;
+      return ((_this$field = this.field) === null || _this$field === void 0 ? void 0 : _this$field.options) || [];
     },
     hasOptions: function hasOptions() {
-      var options = this.fieldOptions;
-      var hasOpts = !!options && _typeof(options) === 'object' && Object.keys(options).length > 0;
-      console.log('hasOptions:', hasOpts, options);
-      return hasOpts;
+      return Array.isArray(this.fieldOptions) && this.fieldOptions.length > 0;
     }
   },
   methods: {
@@ -196,11 +182,31 @@ __webpack_require__.r(__webpack_exports__);
   props: {
     index: Number,
     item: Object,
+    editMode: {
+      type: Boolean,
+      "default": true
+    },
+    readOnly: {
+      type: Boolean,
+      "default": false
+    },
+    readOnlyKeys: {
+      type: Boolean,
+      "default": false
+    },
+    canDeleteRow: {
+      type: Boolean,
+      "default": true
+    },
     options: {
-      type: Object,
+      type: Array,
       "default": function _default() {
-        return {};
+        return [];
       }
+    },
+    placeholder: {
+      type: String,
+      "default": 'Choose an option'
     }
   },
   emits: ['remove-row'],
@@ -210,6 +216,18 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   methods: {
+    isNotObject: function isNotObject() {
+      return !(this.item.value instanceof Object);
+    },
+    isEditable: function isEditable() {
+      return !this.readOnly;
+    },
+    defaultBackgroundColors: function defaultBackgroundColors() {
+      return 'bg-white dark:bg-gray-900';
+    },
+    disabledBackgroundColors: function disabledBackgroundColors() {
+      return this.editMode === true ? 'bg-gray-50 dark:bg-gray-700' : this.defaultBackgroundColors;
+    },
     handleKeyFieldFocus: function handleKeyFieldFocus() {
       var keyField = this.$refs.keyField;
       if (keyField) {
@@ -361,15 +379,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     field: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
       return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", null, [!$options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, " Please provide options using the ->options() method. ")) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasOptions ? (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)(((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_FormTable, {
         key: 1,
-        "edit-mode": true,
-        "can-delete-row": true
+        "edit-mode": !_ctx.currentlyIsReadonly,
+        "can-delete-row": _ctx.currentField.canDeleteRow
       }, {
         "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
           return [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FormHeader, {
             "key-label": _ctx.field.keyLabel || 'Key',
             "value-label": _ctx.field.valueLabel || 'Value'
           }, null, 8 /* PROPS */, ["key-label", "value-label"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(_ctx.theData, function (item, index) {
-            var _ctx$field$options, _ctx$field;
             return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_FormItem, {
               index: index,
               onRemoveRow: $options.removeRow,
@@ -377,16 +394,16 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
               key: item.id,
               ref_for: true,
               ref: item.id,
-              "edit-mode": true,
-              "read-only": false,
-              "read-only-keys": false,
-              "can-delete-row": true,
-              options: (_ctx$field$options = (_ctx$field = _ctx.field) === null || _ctx$field === void 0 ? void 0 : _ctx$field.options) !== null && _ctx$field$options !== void 0 ? _ctx$field$options : {}
-            }, null, 8 /* PROPS */, ["index", "onRemoveRow", "item", "options"]);
+              "read-only": _ctx.currentlyIsReadonly,
+              "read-only-keys": _ctx.currentField.readonlyKeys,
+              "can-delete-row": _ctx.currentField.canDeleteRow,
+              options: $options.fieldOptions,
+              placeholder: _ctx.field.placeholder || _ctx.__('Choose an option')
+            }, null, 8 /* PROPS */, ["index", "onRemoveRow", "item", "read-only", "read-only-keys", "can-delete-row", "options", "placeholder"]);
           }), 128 /* KEYED_FRAGMENT */))])];
         }),
         _: 1 /* STABLE */
-      }, 512 /* NEED_PATCH */)), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, _ctx.theData.length > 0]]) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), $options.hasOptions ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_Button, {
+      }, 8 /* PROPS */, ["edit-mode", "can-delete-row"])), [[vue__WEBPACK_IMPORTED_MODULE_0__.vShow, _ctx.theData.length > 0]]) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), !_ctx.currentlyIsReadonly && !_ctx.currentField.readonlyKeys && _ctx.currentField.canAddRow ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_Button, {
         key: 2,
         "class": "w-full flex items-center justify-center mt-3",
         onClick: $options.addRow,
@@ -453,7 +470,7 @@ var _hoisted_2 = {
   "class": "flex flex-grow p-2"
 };
 var _hoisted_3 = {
-  "class": "w-48"
+  "class": "w-46 flex relative"
 };
 var _hoisted_4 = ["dusk"];
 var _hoisted_5 = ["value"];
@@ -470,23 +487,32 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "onUpdate:modelValue": _cache[0] || (_cache[0] = function ($event) {
       return $props.item.key = $event;
     }),
-    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["w-full form-select form-input form-input-bordered", {
+    "class": (0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["w-48 block form-control form-control-bordered form-input", {
       'form-input-border-error': $options.hasError
     }]),
     ref: "keyField",
     onFocus: _cache[1] || (_cache[1] = function () {
       return $options.handleKeyFieldFocus && $options.handleKeyFieldFocus.apply($options, arguments);
     })
-  }, [_cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: ""
-  }, "Select a key", -1 /* HOISTED */)), _cache[5] || (_cache[5] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("option", {
-    value: ""
-  }, "Select a key", -1 /* HOISTED */)), ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.options || {}, function (label, key) {
+  }, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($props.options, function (option) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("option", {
-      key: key,
-      value: key
-    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(label), 9 /* TEXT, PROPS */, _hoisted_5);
-  }), 128 /* KEYED_FRAGMENT */))], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_4), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $props.item.key]])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+      key: option.value,
+      value: option.value
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(option.label), 9 /* TEXT, PROPS */, _hoisted_5);
+  }), 128 /* KEYED_FRAGMENT */))], 42 /* CLASS, PROPS, NEED_HYDRATION */, _hoisted_4), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelSelect, $props.item.key]]), _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
+    "class": "pointer-events-none absolute inset-y-0 right-[11px] flex items-center"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("svg", {
+    xmlns: "http://www.w3.org/2000/svg",
+    viewBox: "0 0 20 20",
+    fill: "currentColor",
+    "aria-hidden": "true",
+    "data-slot": "icon",
+    "class": "w-5 h-5 shrink-0 text-gray-700 dark:text-gray-400 transform"
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path", {
+    "fill-rule": "evenodd",
+    d: "M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z",
+    "clip-rule": "evenodd"
+  })])], -1 /* HOISTED */))]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     dusk: "key-value-value-".concat($props.index),
     "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) {
       return $props.item.value = $event;
@@ -501,7 +527,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       return _ctx.$emit('remove-row', $props.item.id);
     }),
     "class": "appearance-none cursor-pointer text-red-500 hover:text-red-400"
-  }, _cache[6] || (_cache[6] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("svg", {
+  }, _cache[5] || (_cache[5] = [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("svg", {
     "class": "w-4 h-4",
     fill: "none",
     viewBox: "0 0 24 24",

@@ -14,8 +14,8 @@
         <FormTable
           v-if="hasOptions"
           v-show="theData.length > 0"
-          :edit-mode="true"
-          :can-delete-row="true"
+          :edit-mode="!currentlyIsReadonly"
+          :can-delete-row="currentField.canDeleteRow"
         >
           <FormHeader
             :key-label="field.keyLabel || 'Key'"
@@ -30,17 +30,21 @@
               :item="item"
               :key="item.id"
               :ref="item.id"
-              :edit-mode="true"
-              :read-only="false"
-              :read-only-keys="false"
-              :can-delete-row="true"
-              :options="field?.options ?? {}"
+              :read-only="currentlyIsReadonly"
+              :read-only-keys="currentField.readonlyKeys"
+              :can-delete-row="currentField.canDeleteRow"
+              :options="fieldOptions"
+              :placeholder="field.placeholder || __('Choose an option')"
             />
           </div>
         </FormTable>
 
         <Button
-          v-if="hasOptions"
+          v-if="
+            !currentlyIsReadonly &&
+            !currentField.readonlyKeys &&
+            currentField.canAddRow
+          "
           class="w-full flex items-center justify-center mt-3"
           @click="addRow"
           variant="link"
@@ -85,11 +89,6 @@ export default {
   }),
 
   mounted() {
-    console.log('Field data:', this.field)
-    console.log('Field meta:', this.field?.meta)
-    console.log('Field options:', this.field?.meta?.options)
-    
-    // Delay the population to ensure field.meta is available
     this.$nextTick(() => {
       this.populateKeyValueData()
     })
@@ -97,17 +96,11 @@ export default {
 
   computed: {
     fieldOptions() {
-      // In Nova 5, options are directly on the field object
-      const options = this.field?.options ?? {}
-      console.log('Computed fieldOptions:', options)
-      return options
+      return this.field?.options || []
     },
 
     hasOptions() {
-      const options = this.fieldOptions
-      const hasOpts = !!options && typeof options === 'object' && Object.keys(options).length > 0
-      console.log('hasOptions:', hasOpts, options)
-      return hasOpts
+      return Array.isArray(this.fieldOptions) && this.fieldOptions.length > 0
     }
   },
 
