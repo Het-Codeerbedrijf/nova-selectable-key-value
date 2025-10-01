@@ -1,6 +1,6 @@
 {
-    "name": "nowakadmin/selectable-key-value",
-    "description": "A Laravel Nova field.",
+    "name": "lemonlabs/nova-selectable-key-value",
+    "description": "Laravel Nova KeyValue field with definable keys.",
     "keywords": [
         "laravel",
         "nova"
