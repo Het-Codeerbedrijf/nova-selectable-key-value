@@ -1,0 +1,8 @@
+{
+    "Key": "Sleutel",
+    "Value": "Waarde",
+    "Add row": "Rij toevoegen",
+    "Select a key": "Selecteer een sleutel",
+    "Delete": "Verwijderen",
+    "Please provide key options using the ->keyOptions() method.": "Geef sleutelopties op met de ->keyOptions() methode."
+}

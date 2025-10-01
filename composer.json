@@ -1,11 +1,21 @@
 {
     "name": "lemonlabs/nova-selectable-key-value",
-    "description": "Laravel Nova KeyValue field with definable keys.",
+    "description": "Laravel Nova KeyValue field with definable selectable keys.",
     "keywords": [
         "laravel",
         "nova"
     ],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "NowakAdmin",
+            "homepage": "https://github.com/nowakadmin"
+        },
+        {
+            "name": "Iskander",
+            "email": "iskander@lemonlabs.nl"
+        }
+    ],
     "require": {
         "php": "^8.1",
         "illuminate/support": "^10.0|^11.0|^12.0"
@@ -19,19 +29,19 @@
     ],
     "autoload": {
         "psr-4": {
-            "Nowakadmin\\SelectableKeyValue\\": "src/"
+            "LemonLabs\\SelectableKeyValue\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Nowakadmin\\SelectableKeyValue\\FieldServiceProvider"
+                "LemonLabs\\SelectableKeyValue\\FieldServiceProvider"
             ]
         }
     },
     "config": {
         "sort-packages": true
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

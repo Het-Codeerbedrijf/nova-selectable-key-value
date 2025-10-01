@@ -5,8 +5,8 @@
         <select :dusk="`key-value-key-${index}`" v-model="item.key"
           class="w-48 block form-control form-control-bordered form-input"
           :class="{ 'form-input-border-error': hasError }" ref="keyField" @focus="handleKeyFieldFocus">
-          <option v-for="option in options" :key="option.value" :value="option.value">
-            {{ option.label }}
+          <option v-for="keyOption in keyOptions" :key="keyOption.value" :value="keyOption.value">
+            {{ keyOption.label }}
           </option>
           
         </select>
@@ -57,13 +57,13 @@ export default {
       type: Boolean,
       default: true,
     },
-    options: {
+    keyOptions: {
       type: Array,
       default: () => []
     },
     placeholder: {
       type: String,
-      default: 'Choose an option'
+      default: 'Choose a key option'
     }
   },
 

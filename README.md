@@ -1,14 +1,14 @@
 # SelectableKeyValue Nova Field
 
-A Laravel Nova custom field for key-value pairs where the key is a dropdown (select) with options set via `->options()`.
+A Laravel Nova custom field for key-value pairs where the key is a dropdown (select) with options set via `->keyOptions()`.
 
 ## Usage
 
 ```php
-use NowakAdmin\SelectableKeyValue\SelectableKeyValue;
+use LemonLabs\SelectableKeyValue\SelectableKeyValue;
 
 SelectableKeyValue::make('Settings')
-    ->options([
+    ->keyOptions([
         'option1' => 'Option 1',
         'option2' => 'Option 2',
     ])
@@ -18,11 +18,6 @@ SelectableKeyValue::make('Settings')
 
 1. Install the package in your Nova project:
    ```sh
-   composer require nowakadmin/selectable-key-value
+   composer require lemonlabs/nova-selectable-key-value
    ```
-2. Build assets:
-   ```sh
-   cd nova-components/SelectableKeyValue
-   npm install && npm run dev
-   ```
-3. Register the field in your Nova resource as shown above.
+2. Use the field in your Nova resource as shown above.

@@ -4,3 +4,8 @@
 /node_modules/
 composer.lock
 package-lock.json
+auth.json
+.env
+.DS_Store
+.idea/
+.vscode/

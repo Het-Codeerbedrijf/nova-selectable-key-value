@@ -7,12 +7,12 @@
   >
     <template #field>
       <div>
-        <div v-if="!hasOptions" class="text-sm text-red-500 mb-2">
-          Please provide options using the ->options() method.
+        <div v-if="!hasKeyOptions" class="text-sm text-red-500 mb-2">
+          Please provide key options using the ->keyOptions() method.
         </div>
         
         <FormTable
-          v-if="hasOptions"
+          v-if="hasKeyOptions"
           v-show="theData.length > 0"
           :edit-mode="!currentlyIsReadonly"
           :can-delete-row="currentField.canDeleteRow"
@@ -33,8 +33,8 @@
               :read-only="currentlyIsReadonly"
               :read-only-keys="currentField.readonlyKeys"
               :can-delete-row="currentField.canDeleteRow"
-              :options="fieldOptions"
-              :placeholder="field.placeholder || __('Choose an option')"
+              :key-options="fieldKeyOptions"
+              :placeholder="field.placeholder || __('Choose a key option')"
             />
           </div>
         </FormTable>
@@ -53,8 +53,8 @@
           <span class="mr-1">{{ field.actionText || 'Add row' }}</span>
         </Button>
 
-        <p v-if="!hasOptions" class="text-sm text-red-500 mt-2">
-          Please provide options using the ->options() method.
+        <p v-if="!hasKeyOptions" class="text-sm text-red-500 mt-2">
+          Please provide key options using the ->keyOptions() method.
         </p>
       </div>
     </template>
@@ -95,12 +95,12 @@ export default {
   },
 
   computed: {
-    fieldOptions() {
-      return this.field?.options || []
+    fieldKeyOptions() {
+      return this.field?.keyOptions || []
     },
 
-    hasOptions() {
-      return Array.isArray(this.fieldOptions) && this.fieldOptions.length > 0
+    hasKeyOptions() {
+      return Array.isArray(this.fieldKeyOptions) && this.fieldKeyOptions.length > 0
     }
   },
 
@@ -114,9 +114,9 @@ export default {
     },
 
     addRow() {
-      if (!this.hasOptions) return
+      if (!this.hasKeyOptions) return
       
-      const firstKey = Object.keys(this.fieldOptions)[0] || ''
+      const firstKey = Object.keys(this.fieldKeyOptions)[0] || ''
       this.theData.push({ id: guid(), key: firstKey, value: '' })
     },
 

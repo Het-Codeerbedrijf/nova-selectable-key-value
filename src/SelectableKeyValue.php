@@ -1,15 +1,15 @@
 <?php
 
-namespace NowakAdmin\SelectableKeyValue;
+namespace LemonLabs\SelectableKeyValue;
 
-use Laravel\Nova\Fields\KeyValue;
-use Laravel\Nova\Fields\FieldFilterable;
-use Laravel\Nova\Fields\SupportsDependentFields;
-use Laravel\Nova\Fields\Searchable;
 use Illuminate\Support\Arr;
 use Laravel\Nova\Contracts\FilterableField;
 use Laravel\Nova\Exceptions\NovaException;
+use Laravel\Nova\Fields\FieldFilterable;
 use Laravel\Nova\Fields\Filters\SelectFilter;
+use Laravel\Nova\Fields\KeyValue;
+use Laravel\Nova\Fields\Searchable;
+use Laravel\Nova\Fields\SupportsDependentFields;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 use Stringable;
@@ -30,13 +30,27 @@ class SelectableKeyValue extends KeyValue implements FilterableField
     public $component = 'selectable-key-value';
 
     /**
-     * The field's options callback.
+     * Indicates if the field is used to manipulate JSON.
+     *
+     * @var bool
+     */
+    public $json = false;
+
+    /**
+     * The JSON encoding options.
+     *
+     * @var int|null
+     */
+    public $jsonOptions = null;
+
+    /**
+     * The field's keys callback.
      *
      * @var iterable<string|int, array<string, mixed>|string>|callable|class-string<\BackedEnum>|null
      *
-     * @phpstan-var TOption|(callable(): (TOption))|null
+     * @phpstan-var TKeyOption|(callable(): (TKeyOption))|null
      */
-    public $optionsCallback;
+    public $keyOptionsCallback;
 
     /**
      * Create a new field.
@@ -46,31 +60,29 @@ class SelectableKeyValue extends KeyValue implements FilterableField
      * @param  callable|null  $resolveCallback
      * @return void
      */
-
-     /**
-     * Set the options for the select menu.
-     *
-     * @param  iterable<string|int, array<string, mixed>|string>|callable|class-string<\BackedEnum>  $options
-     * @return $this
-     *
-     * @phpstan-param TOption|(callable(): (TOption)) $options
-     */
-    public function options(iterable|callable|string $options)
-    {
-        $this->optionsCallback = $options;
-
-        return $this;
-    }
-    /*public function __construct($name, $attribute = null, callable $resolveCallback = null)
+    public function __construct($name, $attribute = null, ?callable $resolveCallback = null)
     {
         parent::__construct($name, $attribute, $resolveCallback);
 
         $this->withMeta([
-            'options' => [],
-            'keyLabel' => 'Key',
-            'valueLabel' => 'Value',
+            'options' => []
         ]);
-    }*/
+    }
+
+    /**
+     * Set the key options for the select menu.
+     *
+     * @param  iterable<string|int, array<string, mixed>|string>|callable|class-string<\BackedEnum>  $keyOptions
+     * @return $this
+     *
+     * @phpstan-param TKeyOption|(callable(): (TKeyOption)) $keyOptions
+     */
+    public function keyOptions(iterable|callable|string $keyOptions)
+    {
+        $this->keyOptionsCallback = $keyOptions;
+
+        return $this;
+    }
 
     /**
      * Set the options for the select field.
@@ -78,7 +90,7 @@ class SelectableKeyValue extends KeyValue implements FilterableField
      * @param  array  $options
      * @return $this
      */
-   /* public function options($options)
+    public function options($options)
     {
         // Convert sequential array to associative if needed
         if (is_array($options) && array_keys($options) === range(0, count($options) - 1)) {
@@ -86,7 +98,7 @@ class SelectableKeyValue extends KeyValue implements FilterableField
         }
 
         return $this->withMeta(['options' => $options]);
-    }*/
+    }
 
     /**
      * Enable subtitles within the related search results.
@@ -125,31 +137,31 @@ class SelectableKeyValue extends KeyValue implements FilterableField
     }
 
     /**
-     * Serialize options for the field.
+     * Serialize key options for the field.
      *
      * @return array<int, array<string, mixed>>
      *
-     * @phpstan-return array<int, array{group?: string, label: string, value: TOptionValue}>
+     * @phpstan-return array<int, array{group?: string, label: string, value: TKeyOptionValue}>
      */
-    protected function serializeOptions(bool $searchable): array
+    protected function serializeKeyOptions(bool $searchable): array
     {
-        /** @var TOption $options */
-        $options = value($this->optionsCallback);
+        /** @var TKeyOption $keyOptions */
+        $keyOptions = value($this->keyOptionsCallback);
 
-        if (\is_string($options) && enum_exists($options)) {
-            /** @var class-string<\BackedEnum> $options */
-            return collect($options::cases())
-                ->map(static fn ($option) => [
-                    'label' => Nova::humanize($option),
-                    'value' => $option->value,
+        if (\is_string($keyOptions) && enum_exists($keyOptions)) {
+            /** @var class-string<\BackedEnum> $keyOptions */
+            return collect($keyOptions::cases())
+                ->map(static fn ($keyOption) => [
+                    'label' => Nova::humanize($keyOption),
+                    'value' => $keyOption->value,
                 ])->all();
         }
 
-        if (\is_callable($options)) {
-            $options = $options();
+        if (\is_callable($keyOptions)) {
+            $keyOptions = $keyOptions();
         }
 
-        return collect($options ?? [])->map(static function ($label, $value) use ($searchable) {
+        return collect($keyOptions ?? [])->map(static function ($label, $value) use ($searchable) {
             $label = $label instanceof Stringable ? (string) $label : $label;
             $value = safe_int($value);
 
@@ -172,7 +184,7 @@ class SelectableKeyValue extends KeyValue implements FilterableField
     public function jsonSerialize(): array
     {
         $this->withMeta([
-            'options' => $this->serializeOptions($searchable = $this->isSearchable(app(NovaRequest::class))),
+            'keyOptions' => $this->serializeKeyOptions($searchable = $this->isSearchable(app(NovaRequest::class))),
             'keyLabel' => $this->keyLabel ?? Nova::__('Key'),
             'valueLabel' => $this->valueLabel ?? Nova::__('Value'),
             'actionText' => $this->actionText ?? Nova::__('Add row'),
@@ -204,15 +216,15 @@ class SelectableKeyValue extends KeyValue implements FilterableField
                 return $value;
             }
 
-            $options = collect($this->serializeOptions(false))->pluck('label', 'value')->all();
-            
+            $keyOptions = collect($this->serializeKeyOptions(false))->pluck('label', 'value')->all();
+
             if (!is_array($value)) {
-                return $options[$value] ?? $value;
+                return $keyOptions[$value] ?? $value;
             }
 
-            return collect($value)->map(function ($fieldValue, $key) use ($options) {
+            return collect($value)->map(function ($fieldValue, $key) use ($keyOptions) {
                 return [
-                    $options[$key] ?? $key => $fieldValue
+                    $keyOptions[$key] ?? $key => $fieldValue,
                 ];
             })->collapse()->all();
         })->displayUsing(function ($value) {
@@ -229,11 +241,82 @@ class SelectableKeyValue extends KeyValue implements FilterableField
     /**
      * Set the placeholder text for the field.
      *
-     * @param  string|\Stringable|null  $text
      * @return $this
      */
     public function placeholder(string|\Stringable|null $text)
     {
         return $this->withMeta(['placeholder' => $text]);
+    }
+
+    /**
+     * Resolve the given attribute from the given resource.
+     *
+     * @param  \Laravel\Nova\Resource|\Illuminate\Database\Eloquent\Model|object  $resource
+     */
+    #[\Override]
+    protected function resolveAttribute($resource, string $attribute): mixed
+    {
+        $value = parent::resolveAttribute($resource, $attribute);
+
+        if ($this->json) {
+            return json_decode($value, $this->jsonOptions ?? JSON_PRETTY_PRINT);
+        }
+
+        return $value;
+    }
+
+    protected function parseJsonValue(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            $lower = strtolower($value);
+
+            if ($lower === 'true') {
+                return true;
+            } elseif ($lower === 'false') {
+                return false;
+            } elseif (is_numeric($value)) {
+                return strpos($value, '.') !== false ? (float) $value : (int) $value;
+            }
+        }
+
+        return $value;
+    }
+
+    protected function fillAttribute(NovaRequest $request, string $requestAttribute, object $model, string $attribute): void
+    {
+        $value = $request->input($requestAttribute);
+
+        if ($this->json) {
+            if (empty($value)) {
+                $model->{$attribute} = null;
+
+                return;
+            }
+
+            $data = is_string($value) ? json_decode($value, true) : $value;
+            $parsed = [];
+
+            foreach ((array) $data as $key => $val) {
+                $parsed[$key] = $this->parseJsonValue($val);
+            }
+
+            $value = $parsed;
+        }
+
+        $model->{$attribute} = $value;
+    }
+
+    /**
+     * Indicate that the code field is used to manipulate JSON.
+     *
+     * @return $this
+     */
+    public function json(?int $options = null)
+    {
+        $this->json = true;
+
+        $this->jsonOptions = $options ?? JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE;
+
+        return $this->options(['mode' => 'application/json']);
     }
 }

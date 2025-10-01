@@ -1,6 +1,6 @@
 <?php
 
-namespace NowakAdmin\SelectableKeyValue;
+namespace LemonLabs\SelectableKeyValue;
 
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Events\ServingNova;

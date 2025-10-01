@@ -4,5 +4,5 @@
     "Add row": "Dodaj wiersz",
     "Select a key": "Wybierz klucz",
     "Delete": "Usuń",
-    "Please provide options using the ->options() method.": "Proszę podać opcje używając metody ->options()."
+    "Please provide key options using the ->keyOptions() method.": "Proszę podać opcje klucza używając metody ->keyOptions()."
 }
