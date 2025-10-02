@@ -284,6 +284,10 @@ class SelectableKeyValue extends KeyValue implements FilterableField
 
     protected function fillAttribute(NovaRequest $request, string $requestAttribute, object $model, string $attribute): void
     {
+        if (!$request->exists($requestAttribute)) {
+            return;
+        }
+
         $value = $request->input($requestAttribute);
 
         if ($this->json) {
